@@ -40,7 +40,7 @@ export function evaluateCbmVersion(version: CbmVersion | undefined): CbmVersionC
     return {
       status: "too-old",
       version: text,
-      message: `codebase-memory-mcp ${text} is unsupported; pi-cbm requires 0.12.x (${SUPPORTED_CBM_VERSION_RANGE}). Upgrade codebase-memory-mcp, or reinstall an earlier pi-cbm release (<= 1.2.1) to keep using it.`,
+      message: `codebase-memory-mcp ${text} is unsupported; omp-cbm requires 0.12.x (${SUPPORTED_CBM_VERSION_RANGE}). Upgrade codebase-memory-mcp, or reinstall an earlier pi-cbm release (<= 1.2.1) to keep using it.`,
     };
   }
   if (version.major === 0 && version.minor === 12) return { status: "ok", version: text };

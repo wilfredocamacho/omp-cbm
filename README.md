@@ -111,7 +111,7 @@ This extension requires `codebase-memory-mcp` >= 0.12 and targets the 0.12.x CLI
 When an Oh My Pi session starts, the extension probes the binary. An unsupported version is shown to you once as an error notification telling you to upgrade, and every graph tool fails with the same message instead of silently returning empty results:
 
 ```text
-codebase-memory-mcp 0.10.0 is unsupported; pi-cbm requires 0.12.x (>=0.12.0 <0.13.0).
+codebase-memory-mcp 0.10.0 is unsupported; omp-cbm requires 0.12.x (>=0.12.0 <0.13.0).
 Upgrade codebase-memory-mcp, or reinstall an earlier pi-cbm release (<= 1.2.1) to keep using it.
 ```
 

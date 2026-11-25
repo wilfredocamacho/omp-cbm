@@ -121,6 +121,17 @@ CLI output is normalized before it reaches the tools, so the 0.12 table shapes (
 
 ## Install
 
+This repository is also its own marketplace catalog (`.omp-plugin/marketplace.json`), so the plugin installs by short name:
+
+```sh
+omp plugin marketplace add wilfredocamacho/omp-cbm
+omp plugin install omp-cbm@omp-cbm
+```
+
+`omp plugin upgrade omp-cbm@omp-cbm` picks up a new release after `omp plugin marketplace update omp-cbm`. The catalog entry points at `"./"`, so it tracks the default branch rather than a pinned commit.
+
+Without the catalog:
+
 ```sh
 omp plugin install github:wilfredocamacho/omp-cbm
 ```

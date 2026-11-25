@@ -1,0 +1,12 @@
+{
+  "name": "omp-cbm",
+  "owner": { "name": "Wilfredo Camacho" },
+  "plugins": [
+    {
+      "name": "omp-cbm",
+      "description": "Exposes codebase-memory-mcp as native Oh My Pi tools, with background indexing and token-tuned output.",
+      "version": "2.0.0",
+      "source": "./"
+    }
+  ]
+}

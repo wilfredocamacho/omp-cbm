@@ -1,23 +1,33 @@
-# pi-cbm
+# omp-cbm
 
-Pi extension that exposes [`codebase-memory-mcp`](https://github.com/DeusData/codebase-memory-mcp) as native Pi tools. `codebase-memory-mcp provides a fast local code graph. pi-cbm adds auto-indexing and adapts it for Pi agents in a way that is deliberately optimized for agent workflows and token saving.
+Fork of [pi-cbm](https://github.com/alexykn/pi-cbm) ported to [Oh My Pi](https://omp.sh).
 
-This package does not implement an MCP client. It uses `codebase-memory-mcp cli --json <tool> <args>` and registers the core tools directly with Pi. When a Pi session starts, it automatically indexes the current git root, or a safe non-git working directory when enabled, in full mode in the background, then re-indexes it whenever its files change so graph tools stay current.
+Oh My Pi extension that exposes [`codebase-memory-mcp`](https://github.com/DeusData/codebase-memory-mcp) as native tools. `codebase-memory-mcp` provides a fast local code graph; this fork adds auto-indexing and adapts it for Oh My Pi agents in a way that is deliberately optimized for agent workflows and token saving.
+
+This package does not implement an MCP client. It uses `codebase-memory-mcp cli --json <tool> <args>` and registers the core tools directly with Oh My Pi. When a session starts, it automatically indexes the current git root, or a safe non-git working directory when enabled, in full mode in the background, then re-indexes it whenever its files change so graph tools stay current.
+
+## Upstream compatibility
+
+Built and tested against `codebase-memory-mcp` 0.12.1, the same contract as `pi-cbm` 2.0.0.
+
+- Every CLI call requests `format: "json"`.
+- The 0.12 table payloads (`{ cols, rows }`, `groups` with `qn_prefix`, `{ cols, rows }` label tables, absolute `file` paths, tree-text `list_projects`) are converted to object arrays in `src/cbm/normalize.ts` before any tool sees them.
+- Older shapes are left untouched by that normalization.
 
 ## What makes this different
 
-- **Token-saving output by default.** Several upstream tools return rich graph metadata, fingerprints, scores, and raw analysis fields. `pi-cbm` strips less-useful metadata by default and returns compact, location-first results. Use `include_metadata: true` when you need the full upstream payload.
+- **Token-saving output by default.** Several upstream tools return rich graph metadata, fingerprints, scores, and raw analysis fields. This fork strips less-useful metadata by default and returns compact, location-first results. Use `include_metadata: true` when you need the full upstream payload.
 - **Source compaction controls.** Tools that may return code support `full_output` and `max_symbol_lines`. Normal-sized symbols are returned directly; oversized code blocks are compacted and the full uncompacted JSON is saved to a temp file.
-- **Symbol-first helpers.** Upstream `get_code_snippet` works best when you already know the exact `qualified_name`. `pi-cbm` adds `resolve_symbol` and `read_symbol` so the agent can start from a normal symbol name, disambiguate with file/class/route filters, and only read source when the match is unambiguous.
+- **Symbol-first helpers.** Upstream `get_code_snippet` works best when you already know the exact `qualified_name`. This fork adds `resolve_symbol` and `read_symbol` so the agent can start from a normal symbol name, disambiguate with file/class/route filters, and only read source when the match is unambiguous.
 - **Safe-by-default symbol reading.** `read_symbol` fails closed on ambiguity: it returns candidate identities instead of guessing and reading the wrong source. When exactly one symbol matches, it calls upstream `get_code_snippet` and can optionally include compact direct callers/callees.
 - **Batch source-reading workflows.** `get_code_snippets`, `read_symbols`, and `search_and_read_symbols` let agents inspect several relevant symbols in one tool call instead of looping through many single-symbol calls. These batch tools keep the same compact metadata defaults while preserving essential locations, per-item ambiguity/error results, and source compaction controls.
-- **Current project stays indexed.** On Pi session start, the extension indexes the current git root, or a safe non-git working directory when explicitly enabled, in full mode, then checks it periodically in the background and re-indexes only when files changed since the graph was taken (see [Index freshness](#index-freshness)). A cross-process per-repository lease prevents duplicate indexers for one repository, while a configurable global token queue limits indexing across repositories (`PI_CBM_MAX_CONCURRENT_INDEXES`, default `1`). Root, home, system, and common builtin OS directories are never auto-indexed.
+- **Current project stays indexed.** On session start, the extension indexes the current git root, or a safe non-git working directory when explicitly enabled, in full mode, then checks it periodically in the background and re-indexes only when files changed since the graph was taken (see [Index freshness](#index-freshness)). A cross-process per-repository lease prevents duplicate indexers for one repository, while a configurable global token queue limits indexing across repositories (`PI_CBM_MAX_CONCURRENT_INDEXES`, default `1`). Root, home, system, and common builtin OS directories are never auto-indexed.
 - **Project inference for cwd workflows.** Most tools accept optional `project`, but for normal current-repo work the extension infers the indexed project from Pi's current working directory.
-- **Query tools only.** The agent gets code-exploration tools, not administrative controls. `index_repository` and `list_projects` are used internally for background indexing and project inference; destructive/admin MCP tools such as project deletion are not registered as Pi tools.
+- **Query tools only.** The agent gets code-exploration tools, not administrative controls. `index_repository` and `list_projects` are used internally for background indexing and project inference; destructive/admin MCP tools such as project deletion are not registered as Oh My Pi tools.
 
 ## Security
 
-Pi extensions run with your local user permissions. This extension also shells out to the `codebase-memory-mcp` binary installed on your machine, so install both this package and `codebase-memory-mcp` only from sources you trust.
+Oh My Pi extensions run with your local user permissions. This extension also shells out to the `codebase-memory-mcp` binary installed on your machine, so install both this package and `codebase-memory-mcp` only from sources you trust.
 
 ## Requirements: install codebase-memory-mcp
 
@@ -98,7 +108,7 @@ export PI_CBM_BIN="$HOME/.local/bin/codebase-memory-mcp"
 
 This extension requires `codebase-memory-mcp` >= 0.12 and targets the 0.12.x CLI contract (`>=0.12.0 <0.13.0`). Captured/tested versions are 0.12.1 (target) and 0.9.0 (old-shape baseline); 0.10.x and 0.11.x were not tested, and the version gate rejects them conservatively. The 0.9.0 fixtures confirm the older shapes differ (`search_graph` object arrays instead of `cols`/`rows` groups, JSON-only `list_projects`), which this client does not parse; a version with those shapes cannot return useful results.
 
-When a Pi session starts, the extension probes the binary. An unsupported version is shown to you once as an error notification telling you to upgrade, and every graph tool fails with the same message instead of silently returning empty results:
+When an Oh My Pi session starts, the extension probes the binary. An unsupported version is shown to you once as an error notification telling you to upgrade, and every graph tool fails with the same message instead of silently returning empty results:
 
 ```text
 codebase-memory-mcp 0.10.0 is unsupported; pi-cbm requires 0.12.x (>=0.12.0 <0.13.0).
@@ -112,13 +122,13 @@ CLI output is normalized before it reaches the tools, so the 0.12 table shapes (
 ## Install
 
 ```sh
-pi install npm:pi-cbm
+omp plugin install github:wilfredocamacho/omp-cbm
 ```
 
-Or test for one run:
+For local development, link the checkout instead:
 
 ```sh
-pi -e npm:pi-cbm
+omp plugin link .
 ```
 
 ## Tools
@@ -139,28 +149,28 @@ Registers:
 - `query_graph`
 - `detect_changes`
 
-Most tools accept optional `project`. When omitted, the extension infers it from indexed project roots matching Pi's current working directory. Agents should omit `project` for cwd/current-project work and provide it only when intentionally querying an external indexed project. A `project` value must be an indexed project name or a path: absolute, or explicitly relative to the current working directory (`.`, `..`, or containing a `/`). A bare word such as `other-repo` is always treated as a project name, never as a directory under the cwd. An unknown value fails with the indexed project list instead of falling back to a guessed name. If the project list itself cannot be read, an explicit name is passed to `codebase-memory-mcp` unchanged, so its own "project not found" answer still applies.
+Most tools accept optional `project`. When omitted, the extension infers it from indexed project roots matching Oh My Pi's current working directory. Agents should omit `project` for cwd/current-project work and provide it only when intentionally querying an external indexed project. A `project` value must be an indexed project name or a path: absolute, or explicitly relative to the current working directory (`.`, `..`, or containing a `/`). A bare word such as `other-repo` is always treated as a project name, never as a directory under the cwd. An unknown value fails with the indexed project list instead of falling back to a guessed name. If the project list itself cannot be read, an explicit name is passed to `codebase-memory-mcp` unchanged, so its own "project not found" answer still applies.
 
 Matching uses the longest indexed root that contains the working directory, so a git worktree or nested checkout that is not indexed itself resolves to the containing repo's graph. Index the worktree separately to query its own graph. When two indexed projects share one root (the default name plus a custom `name`), path and cwd resolution picks the default derived name; pass the custom name explicitly to query that one.
 
 ## Settings
 
-pi-cbm reads these environment variables. Blank counts as unset, and an invalid number falls back to the default.
+omp-cbm reads these environment variables. Blank counts as unset, and an invalid number falls back to the default.
 
 | Variable | Default | Effect |
 | --- | --- | --- |
 | `PI_CBM_BIN` | `codebase-memory-mcp` on `PATH`, then `~/.local/bin/codebase-memory-mcp` | Path to the `codebase-memory-mcp` binary. |
-| `PI_CBM_CACHE_DIR` | `CBM_CACHE_DIR`, else `~/.cache/codebase-memory-mcp` | Cache directory for cbm's databases and pi-cbm's leases, queue and index records. Forwarded to the CLI as `CBM_CACHE_DIR`. |
-| `PI_CBM_MAX_CONCURRENT_INDEXES` | `1` | Machine-wide maximum of simultaneous repository indexers. Raise it only when all Pi sessions share the same cache directory and the machine can support the extra load. |
+| `PI_CBM_CACHE_DIR` | `CBM_CACHE_DIR`, else `~/.cache/codebase-memory-mcp` | Cache directory for cbm's databases and omp-cbm's leases, queue and index records. Forwarded to the CLI as `CBM_CACHE_DIR`. |
+| `PI_CBM_MAX_CONCURRENT_INDEXES` | `1` | Machine-wide maximum of simultaneous repository indexers. Raise it only when all Oh My Pi sessions share the same cache directory and the machine can support the extra load. |
 | `PI_CBM_AUTO_REFRESH_INTERVAL_MS` | `60000` | How often the background refresh checks the session repo. A check that finds no changes runs no index, but each session still pays for it every tick: a `git rev-parse`, a `git ls-files` with a stat of each listed file, one `list_projects` call per 50 indexed projects, and an `index_status` call when the graph was not taken by pi-cbm. Each cbm call is a process of about a second. |
 | `PI_CBM_FRESH_INDEX_TIMEOUT_MS` | `30000` | How long `detect_changes` waits for a re-index (lease wait plus the index) before answering from the existing graph. The re-index keeps running in the background. |
 | `PI_CBM_SKIP_VERSION_CHECK` | unset | `1` skips the `--version` probe. |
 
-`CBM_CACHE_DIR` is `codebase-memory-mcp`'s own variable, not a pi-cbm alias. pi-cbm follows it when `PI_CBM_CACHE_DIR` is unset, so its coordination state stays next to the databases the binary writes.
+`CBM_CACHE_DIR` is `codebase-memory-mcp`'s own variable, not an omp-cbm alias. omp-cbm follows it when `PI_CBM_CACHE_DIR` is unset, so its coordination state stays next to the databases the binary writes.
 
 ### Breaking changes
 
-The `CBM_*` aliases for pi-cbm's own settings, and the old binary variables, are no longer read. Rename them:
+The `CBM_*` aliases for omp-cbm's own settings, and the old binary variables, are no longer read. Rename them:
 
 | Removed | Use instead |
 | --- | --- |
@@ -174,9 +184,9 @@ The `CBM_*` aliases for pi-cbm's own settings, and the old binary variables, are
 
 ## Index freshness
 
-`codebase-memory-mcp` CLI indexes are not watched, and a full re-index costs the same as the first one (seconds for a small repo, minutes for a large one). pi-cbm therefore re-indexes only when the repo changed since the graph was taken, and it uses one check for both the background refresh and `detect_changes`.
+`codebase-memory-mcp` CLI indexes are not watched, and a full re-index costs the same as the first one (seconds for a small repo, minutes for a large one). omp-cbm therefore re-indexes only when the repo changed since the graph was taken, and it uses one check for both the background refresh and `detect_changes`.
 
-- **When the graph was taken.** Each successful pi-cbm index writes a record (project, root, start and finish time) under `<cache dir>/pi-cbm/index-records/`, shared by every Pi session using that cache dir. The reference is the index's **start** time, so an edit made while it ran still counts as a change. When another client (the cbm MCP server, the CLI by hand) indexed the project later, cbm's `index_status.indexed_at` is used instead. With neither, the graph counts as stale.
+- **When the graph was taken.** Each successful omp-cbm index writes a record (project, root, start and finish time) under `<cache dir>/pi-cbm/index-records/`, shared by every Oh My Pi session using that cache dir. The reference is the index's **start** time, so an edit made while it ran still counts as a change. When another client (the cbm MCP server, the CLI by hand) indexed the project later, cbm's `index_status.indexed_at` is used instead. With neither, the graph counts as stale.
 - **Changed since then?** `git ls-files --cached --others --exclude-standard` lists the tracked and untracked, non-ignored files. The global excludes file (`core.excludesFile`) is left out of that listing, because cbm indexes the files only it hides. The repo has changed when any of them, or any of their parent directories, has an mtime at or after the reference minus 1 s (`indexed_at` has second precision). A deleted file shows up through its directory's mtime. Gitignored files do not count. A root git cannot list (no git, or not a repository) always counts as changed, so non-git roots are re-indexed on every refresh as before.
 - **Background refresh.** On session start and on every `PI_CBM_AUTO_REFRESH_INTERVAL_MS` tick, an unchanged repo is skipped and the status line shows `cbm <project> · up to date`. A changed repo is indexed through the usual lease and queue. This is not a TTL: the graph is exactly as fresh as with an index on every tick, but an idle repo no longer costs a full index per session per minute.
 - **`detect_changes`.** An unchanged project is answered right away. A changed one is re-indexed first, by project name, so a custom-named project sharing a root is the one refreshed. If another session, or this session's background refresh, holds the repo's lease, `detect_changes` waits for that index and checks again instead of indexing a second time. Concurrent calls in one session share one re-index; a call whose edits came after that re-index started gets another one. The result carries an `index_freshness` line:
@@ -195,7 +205,7 @@ Known gaps:
 
 ### `/cbm`
 
-Open the pi-cbm settings menu:
+Open the settings menu:
 
 - `/cbm menu` — show the interactive settings menu.
 - `/cbm status` — show auto-index settings.
@@ -233,13 +243,29 @@ Notes:
 
 ## Typical workflow
 
-Ask Pi:
+Ask Oh My Pi:
 
 ```text
 Give me the architecture overview.
 ```
 
 The extension indexes and periodically refreshes the current repo in the background, so the agent should usually go straight to `get_architecture`, `search_graph`, `get_code_snippet`, `trace_path`, `search_code`, or `query_graph` for structural code exploration. Administrative index operations remain available through the `codebase-memory-mcp` CLI when needed.
+
+## Differences from pi-cbm
+
+- Built against the `@oh-my-pi/*` 19.2 package set instead of `@earendil-works/*`.
+- Manifest uses the `omp` key, so it loads through `omp plugin install` and `omp plugin link`.
+- Settings live in `cbm-settings.json` under the Oh My Pi agent directory.
+- Prompt guidance is injected once via `before_agent_start`; Oh My Pi never passes per-tool `promptSnippet`/`promptGuidelines` to the model, so those fields are gone.
+- Tool renderers return plain strings: Oh My Pi's `pi-tui` has no `Text` component to build.
+- `BeforeAgentStartEvent.systemPrompt` is a `string[]`, so the guidance is appended rather than concatenated.
+- The session context exposes no abort `signal`, so lifecycle indexing and the version probe run uncancelled.
+- `trace_path` keeps `status` and `suggestions` from ambiguous-name responses instead of compacting them away, so the candidate list survives.
+- Truncation metadata uses `formatSize`; `@oh-my-pi/pi-utils` is not a dependency.
+
+## License
+
+MIT, same as the upstream project.
 
 ## Development
 

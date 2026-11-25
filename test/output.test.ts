@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { normalizeCbmData } from "../src/cbm/normalize.js";
 import { OutputService } from "../src/domain/output.js";
-import { renderResult } from "../src/pi-tools/render.js";
+import { renderResult } from "../src/cbm-tools/render.js";
 
 const FIXTURE_DIR = new URL("./fixtures/cbm-0.12.1/", import.meta.url);
 
@@ -49,15 +49,15 @@ describe("compact search_graph output on cbm 0.12 paging", () => {
 
   it("renders total with a returned/truncated fallback", () => {
     const withTotal = renderResult("search_graph")({ details: { data: { total: 61, has_more: true } } }, undefined, theme);
-    expect(withTotal.render(200).join(" ")).toContain("total=61");
+    expect(withTotal).toContain("total=61");
 
     const withFallback = renderResult("search_graph")({ details: { data: { returned: 3, truncated: true } } }, undefined, theme);
-    const line = withFallback.render(200).join(" ");
+    const line = withFallback;
     expect(line).toContain("returned=3");
     expect(line).toContain("has_more");
 
     const truncatedOnly = renderResult("search_graph")({ details: { data: { has_more: false, truncated: true } } }, undefined, theme);
-    expect(truncatedOnly.render(200).join(" ")).toContain("has_more");
+    expect(truncatedOnly).toContain("has_more");
   });
 
   it("derives the next offset from offset + returned when cbm omits next_offset", async () => {

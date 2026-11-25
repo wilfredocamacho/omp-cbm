@@ -1,5 +1,5 @@
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { CbmServices } from "../pi-tools/definitions.js";
+import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
+import type { CbmServices } from "../cbm-tools/definitions.js";
 import { cbmEnvPositiveInt, removedEnvWarning } from "../shared/env.js";
 import { errorMessage } from "../shared/strings.js";
 import { CODEBASE_MEMORY_PROMPT } from "./prompt.js";
@@ -8,13 +8,12 @@ const DEFAULT_AUTO_REFRESH_INTERVAL_MS = 60_000;
 const MAX_TIMER_DELAY_MS = 2_147_483_647;
 const AUTO_REFRESH_INTERVAL_MS = cbmEnvPositiveInt("AUTO_REFRESH_INTERVAL_MS", DEFAULT_AUTO_REFRESH_INTERVAL_MS, MAX_TIMER_DELAY_MS);
 
-type SessionResources = Pick<ExtensionContext, "cwd" | "signal" | "ui">;
+type SessionResources = Pick<ExtensionContext, "cwd" | "ui">;
 
 function readSessionResources(ctx: ExtensionContext): SessionResources | undefined {
   try {
     return {
       cwd: ctx.cwd,
-      signal: ctx.signal,
       ui: ctx.ui,
     };
   } catch {
@@ -24,7 +23,7 @@ function readSessionResources(ctx: ExtensionContext): SessionResources | undefin
   }
 }
 
-export function registerLifecycle(pi: ExtensionAPI, services: CbmServices) {
+export function registerLifecycle(api: ExtensionAPI, services: CbmServices) {
   let refreshTimer: ReturnType<typeof setInterval> | undefined;
   // Monotonically increasing session generation. Bumped synchronously on every
   // session start and shutdown so that interval callbacks already queued or
@@ -52,7 +51,7 @@ export function registerLifecycle(pi: ExtensionAPI, services: CbmServices) {
 
   async function checkVersion(session: SessionResources, generation: number) {
     try {
-      await services.cbm.checkVersion(session.signal);
+      await services.cbm.checkVersion();
     } catch {
       // A missing binary or a cancelled session: the index status line reports it.
     }
@@ -61,11 +60,11 @@ export function registerLifecycle(pi: ExtensionAPI, services: CbmServices) {
 
   async function indexCurrentRepo(session: SessionResources, generation: number) {
     if (generation !== sessionGeneration) return; // stale session: skip
-    if (inFlightGeneration === generation || session.signal?.aborted) return;
+    if (inFlightGeneration === generation) return;
 
     inFlightGeneration = generation;
     try {
-      const result = await services.indexing.indexCurrentRepo(session.cwd, session.signal);
+      const result = await services.indexing.indexCurrentRepo(session.cwd);
       if (generation !== sessionGeneration) return; // session changed mid-run
       if (result.status === "skipped") {
         session.ui.setStatus("codebase-memory", `cbm skipped: ${result.reason}`);
@@ -90,11 +89,11 @@ export function registerLifecycle(pi: ExtensionAPI, services: CbmServices) {
     }
   }
 
-  pi.on("before_agent_start", async (event) => ({
-    systemPrompt: event.systemPrompt + CODEBASE_MEMORY_PROMPT,
+  api.on("before_agent_start", async (event) => ({
+    systemPrompt: [...event.systemPrompt, CODEBASE_MEMORY_PROMPT],
   }));
 
-  pi.on("session_start", (_event, ctx) => {
+  api.on("session_start", (_event, ctx) => {
     const session = readSessionResources(ctx);
     if (!session) return;
 
@@ -113,7 +112,7 @@ export function registerLifecycle(pi: ExtensionAPI, services: CbmServices) {
     }, AUTO_REFRESH_INTERVAL_MS);
   });
 
-  pi.on("session_shutdown", () => {
+  api.on("session_shutdown", () => {
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = undefined;
     // Invalidate synchronously so already-queued/running callbacks from this

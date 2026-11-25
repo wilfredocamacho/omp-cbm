@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, truncateHead } from "@earendil-works/pi-coding-agent";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, truncateHead } from "@oh-my-pi/pi-coding-agent/tools/streaming-output";
 import { formatSize } from "../shared/strings.js";
 import type { CbmData } from "./normalize.js";
 
@@ -35,13 +35,13 @@ export async function buildToolTextResult(title: string, data: unknown, details:
   }
 
   if (truncation.truncated) {
-    const dir = await mkdtemp(join(tmpdir(), "pi-cbm-"));
+    const dir = await mkdtemp(join(tmpdir(), "cbm-"));
     const path = join(dir, "result.json");
     await writeFile(path, json, "utf8");
     resultDetails.fullOutputPath = path;
     resultDetails.truncation = truncation;
     text += `\n\n[Output truncated: showing ${truncation.outputLines} of ${truncation.totalLines} lines (${formatSize(
-      truncation.outputBytes,
+      truncation.outputBytes ?? 0,
     )} of ${formatSize(truncation.totalBytes)}). Full output saved to: ${path}]`;
   }
 
@@ -49,7 +49,7 @@ export async function buildToolTextResult(title: string, data: unknown, details:
 }
 
 export async function saveJsonResult(data: unknown, filename = "result.full.json"): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "pi-cbm-"));
+  const dir = await mkdtemp(join(tmpdir(), "cbm-"));
   const path = join(dir, filename);
   await writeFile(path, typeof data === "string" ? data : JSON.stringify(data, null, 2), "utf8");
   return path;

@@ -384,6 +384,9 @@ function compactBatchSourceData(data: unknown): MetadataProjection {
 
 function compactTraceDataForOutput(data: unknown): MetadataProjection {
   if (!isRecord(data)) return { data, pruned: false };
+  // Upstream answers with { status, message, suggestions } when the name is
+  // ambiguous or unknown; there is no trace to compact.
+  if (Array.isArray(data.suggestions) || typeof data.error === "string" || typeof data.status === "string") return { data, pruned: false };
   const compact = pickDefined(data, [
     "function",
     "resolved_function",

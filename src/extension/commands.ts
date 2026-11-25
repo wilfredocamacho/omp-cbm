@@ -1,14 +1,11 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { CbmServices } from "../pi-tools/definitions.js";
+import type { ExtensionAPI, ExtensionUIContext } from "@oh-my-pi/pi-coding-agent";
+import type { CbmServices } from "../cbm-tools/definitions.js";
 
-type CommandUi = {
-  select(title: string, options: string[]): Promise<string | undefined>;
-  notify(message: string, type?: "info" | "warning" | "error" | "success"): void;
-};
+type CommandUi = Pick<ExtensionUIContext, "select" | "notify">;
 
-export function registerCommands(pi: ExtensionAPI, services: CbmServices) {
-  pi.registerCommand("cbm", {
-    description: "Open the pi-cbm settings menu. Usage: /cbm [menu|status|enable-non-git|disable-non-git]",
+export function registerCommands(api: ExtensionAPI, services: CbmServices) {
+  api.registerCommand("cbm", {
+    description: "Open the CBM settings menu. Usage: /cbm [menu|status|enable-non-git|disable-non-git]",
     handler: async (args, ctx) => {
       const action = args.trim() || "menu";
 
@@ -24,13 +21,13 @@ export function registerCommands(pi: ExtensionAPI, services: CbmServices) {
 
       if (action === "enable-non-git") {
         services.settings.setAutoIndexNonGitDirectories(true);
-        ctx.ui.notify("pi-cbm: auto-indexing safe non-git directories is enabled. Root, home, and system paths are still blocked.", "info");
+        ctx.ui.notify("CBM: auto-indexing safe non-git directories is enabled. Root, home, and system paths are still blocked.", "info");
         return;
       }
 
       if (action === "disable-non-git") {
         services.settings.setAutoIndexNonGitDirectories(false);
-        ctx.ui.notify("pi-cbm: auto-indexing non-git directories is disabled. Git repositories will still be indexed.", "info");
+        ctx.ui.notify("CBM: auto-indexing non-git directories is disabled. Git repositories will still be indexed.", "info");
         return;
       }
 
@@ -41,8 +38,8 @@ export function registerCommands(pi: ExtensionAPI, services: CbmServices) {
 
 async function openSettingsMenu(services: CbmServices, ui: CommandUi) {
   while (true) {
-    const choice = await ui.select("pi-cbm settings", [
-      `auto-index non-git directories: ${services.settings.autoIndexNonGitDirectories ? "enabled" : "disabled"} — toggle`,
+    const choice = await ui.select("CBM settings", [
+      `auto-index non-git directories: ${services.settings.autoIndexNonGitDirectories ? "enabled" : "disabled"} - toggle`,
       "show status",
       "done",
     ]);
@@ -54,8 +51,8 @@ async function openSettingsMenu(services: CbmServices, ui: CommandUi) {
       services.settings.setAutoIndexNonGitDirectories(enabled);
       ui.notify(
         enabled
-          ? "pi-cbm: auto-indexing safe non-git directories is enabled. Root, home, and system paths are still blocked."
-          : "pi-cbm: auto-indexing non-git directories is disabled. Git repositories will still be indexed.",
+          ? "CBM: auto-indexing safe non-git directories is enabled. Root, home, and system paths are still blocked."
+          : "CBM: auto-indexing non-git directories is disabled. Git repositories will still be indexed.",
         "info",
       );
       continue;
@@ -69,7 +66,7 @@ async function openSettingsMenu(services: CbmServices, ui: CommandUi) {
 
 function buildStatus(services: CbmServices): string {
   return [
-    "pi-cbm status",
+    "CBM status",
     "  auto-index:",
     "    git repositories: enabled",
     `    non-git directories: ${services.settings.autoIndexNonGitDirectories ? "enabled" : "disabled"}`,

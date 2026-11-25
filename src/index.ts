@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 import { CbmClient } from "./cbm/client.js";
 import { IndexCoordinator } from "./domain/index-coordinator.js";
 import { OutputService } from "./domain/output.js";
@@ -11,9 +11,9 @@ import { TraceService } from "./domain/trace.js";
 import { registerCommands } from "./extension/commands.js";
 import { registerLifecycle } from "./extension/lifecycle.js";
 import { CbmRuntimeSettings } from "./extension/runtime-settings.js";
-import { registerCodebaseMemoryTools } from "./pi-tools/registry.js";
+import { registerCodebaseMemoryTools } from "./cbm-tools/registry.js";
 
-export default function codebaseMemoryExtension(pi: ExtensionAPI) {
+export default function codebaseMemoryExtension(api: ExtensionAPI) {
   const settings = new CbmRuntimeSettings();
   const cbm = new CbmClient();
   const indexCoordinator = new IndexCoordinator();
@@ -26,7 +26,7 @@ export default function codebaseMemoryExtension(pi: ExtensionAPI) {
   const query = new QueryService(cbm, resolver, catalog, indexing, output, trace);
   const services = { cbm, indexing, output, symbols, trace, query, settings };
 
-  registerCodebaseMemoryTools(pi, services);
-  registerCommands(pi, services);
-  registerLifecycle(pi, services);
+  registerCodebaseMemoryTools(api, services);
+  registerCommands(api, services);
+  registerLifecycle(api, services);
 }

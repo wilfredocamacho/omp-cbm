@@ -1,5 +1,9 @@
-import { StringEnum } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
+
+/** JSON-schema string enum; OMP no longer ships a StringEnum helper. */
+function StringEnum<T extends readonly string[]>(values: T) {
+  return Type.Unsafe<T[number]>({ type: "string", enum: values });
+}
 
 export const DIRECTION = StringEnum(["inbound", "outbound", "both"] as const);
 export const TRACE_MODE = StringEnum(["calls", "data_flow", "cross_service"] as const);

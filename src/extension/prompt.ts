@@ -17,8 +17,8 @@ Use codebase-memory for symbol, workflow, relationship, indexed-text, and impact
 - If given multiple concrete symbol/function/class/method names, prefer read_symbols before repeated resolve_symbol/read_symbol calls.
 - Use search_graph when the target is conceptual, unknown, or a workflow rather than a known symbol name.
 - Use search_and_read_symbols when the target is conceptual/unknown and you need source for the likely top matches, not just locations.
-- For conceptual “where is X implemented/handled/performed?” questions, use search_graph first with a small limit, then read_symbol or get_code_snippet only for the likely target symbol.
-- For conceptual “find and inspect the implementation” tasks, use search_and_read_symbols with a small read_limit instead of search_graph plus several separate reads.
+- For conceptual "where is X implemented/handled/performed?" questions, use search_graph first with a small limit, then read_symbol or get_code_snippet only for the likely target symbol.
+- For conceptual "find and inspect the implementation" tasks, use search_and_read_symbols with a small read_limit instead of search_graph plus several separate reads.
 - Use resolve_symbol when you know a symbol name but need the exact qualified_name or candidate list; add file_path, parent_class, label, route_path, or route_method to narrow ambiguous names.
 - Use read_symbol when you know a symbol name plus enough disambiguators and want source only if the match is unambiguous.
 - read_symbol fails closed on ambiguity; if it returns candidates, retry with more disambiguators or use get_code_snippet with an exact qualified_name.
@@ -26,7 +26,7 @@ Use codebase-memory for symbol, workflow, relationship, indexed-text, and impact
 - Use get_code_snippets when you already have multiple exact qualified_name values.
 - Use read_symbol neighbors='callers'/'callees'/'both' for direct, source-free callers/callees. Use trace_path only for multi-hop workflow, dependency, impact, data-flow, or cross-service tracing.
 - Prefer read_symbol/get_code_snippet over raw file reads when the target is a symbol; prefer file reads for known files, configs, docs, manifests, and non-symbol content.
-- For direct “what calls X?” or “what does X call?” questions about a known symbol, prefer read_symbol(neighbors='callers'/'callees'/'both'); use trace_path with shallow depth, usually 2–3, when multi-hop tracing is needed.
+- For direct "what calls X?" or "what does X call?" questions about a known symbol, prefer read_symbol(neighbors='callers'/'callees'/'both'); use trace_path with shallow depth, usually 2-3, when multi-hop tracing is needed.
 - If the query is a symbol name, prefer resolve_symbol/read_symbol; if it is an exact non-symbol string or you need all textual occurrences, use search_code.
 - For exact strings, env vars, route literals, config keys, or template text, use search_code instead of search_graph.
 - For broad architecture orientation in an unfamiliar repo, use get_architecture. Requested aspects may be absent if the index has no data for them; use search_graph/query_graph for targeted route/entry-point lookup.

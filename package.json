@@ -1,8 +1,8 @@
 {
-  "name": "pi-cbm",
+  "name": "omp-cbm",
   "version": "2.0.0",
   "type": "module",
-  "description": "Extension that exposes `codebase-memory-mcp` as native Pi tools, adds auto-indexing and deliberate obtimizations for agent-workflows and token saving.",
+  "description": "Oh My Pi extension that exposes `codebase-memory-mcp` as native tools, with auto-indexing and output shaping tuned for agent workflows and token saving.",
   "main": "./src/index.ts",
   "files": [
     "src/",
@@ -10,13 +10,12 @@
     "LICENSE"
   ],
   "keywords": [
-    "pi-package",
-    "pi-extension",
+    "omp-plugin",
     "codebase-memory",
     "code-intelligence"
   ],
   "license": "MIT",
-  "pi": {
+  "omp": {
     "extensions": [
       "./src/index.ts"
     ]
@@ -29,26 +28,26 @@
     "prepack": "npm run check"
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "^1.4.0",
-    "@earendil-works/pi-coding-agent": "^1.4.0",
-    "@earendil-works/pi-tui": "^1.4.0",
-    "@types/node": "^26.6.5",
-    "typebox": "^1.4.3",
-    "typescript": "^7.0.2",
+    "@oh-my-pi/pi-ai": "^19.2.1",
+    "@oh-my-pi/pi-coding-agent": "^19.2.1",
+    "@oh-my-pi/pi-tui": "^19.2.1",
+    "@types/node": "^25.9.1",
+    "typebox": "^1.4.7",
+    "typescript": "^5.9.3",
     "vitest": "^5.0.5"
   },
   "peerDependencies": {
-    "@earendil-works/pi-ai": "*",
-    "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*",
+    "@oh-my-pi/pi-ai": "*",
+    "@oh-my-pi/pi-coding-agent": "*",
+    "@oh-my-pi/pi-tui": "*",
     "typebox": "*"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alexykn/pi-cbm.git"
+    "url": "git+https://github.com/wilfredocamacho/omp-cbm.git"
   },
   "bugs": {
-    "url": "https://github.com/alexykn/pi-cbm/issues"
+    "url": "https://github.com/wilfredocamacho/omp-cbm/issues"
   },
-  "homepage": "https://github.com/alexykn/pi-cbm#readme"
+  "homepage": "https://github.com/wilfredocamacho/omp-cbm#readme"
 }

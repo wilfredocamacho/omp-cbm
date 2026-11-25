@@ -1,14 +1,14 @@
-import { Text } from "@earendil-works/pi-tui";
+import type { ExtensionTheme } from "@oh-my-pi/pi-coding-agent";
 
 export function renderCall(label: string, pick: (args: Record<string, unknown>) => string | undefined = () => undefined) {
-  return (args: Record<string, unknown>, theme: any) => {
-    const suffix = pick(args);
-    return new Text(`${theme.fg("toolTitle", theme.bold(`${label} `))}${suffix ? theme.fg("accent", suffix) : ""}`, 0, 0);
+  return (rawArgs: unknown, _options: unknown, theme: ExtensionTheme): string => {
+    const suffix = pick((rawArgs ?? {}) as Record<string, unknown>);
+    return `${theme.fg("toolTitle", theme.bold(`${label} `))}${suffix ? theme.fg("accent", suffix) : ""}`;
   };
 }
 
 export function renderResult(label: string) {
-  return (result: { details?: Record<string, unknown> }, _options: unknown, theme: any) => {
+  return (result: { details?: Record<string, unknown> }, _options: unknown, theme: ExtensionTheme): string => {
     const details = result.details ?? {};
     const args = details.args as Record<string, unknown> | undefined;
     const data = details.data as Record<string, unknown> | undefined;
@@ -21,6 +21,6 @@ export function renderResult(label: string) {
     if (hasMore) bits.push(theme.fg("warning", "has_more"));
     if (details.fullOutputPath) bits.push(theme.fg("warning", `full=${String(details.fullOutputPath)}`));
     if (details.uncompactedOutputPath) bits.push(theme.fg("warning", `uncompacted=${String(details.uncompactedOutputPath)}`));
-    return new Text(bits.join(" "), 0, 0);
+    return bits.join(" ");
   };
 }

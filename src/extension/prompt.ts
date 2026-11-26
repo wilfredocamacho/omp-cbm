@@ -1,6 +1,7 @@
 export const CODEBASE_MEMORY_PROMPT = `
 
 Codebase-memory guidance:
+- Some codebase-memory tools are mounted as bash commands instead of native tools. If a tool you want is not in your tool list, run it with --help before first use.
 - Strongly prefer codebase-memory tools over bash/read/grep/find/cat for code exploration. They return compact, symbol-aware, location-first results and usually save substantial tokens/context compared with raw filesystem output.
 - Use shell tools mainly for builds, tests, linting, filesystem state, or reading obvious non-code files. Do not use grep/find/cat as the first step for symbol, workflow, relationship, caller/callee, or indexed-text discovery.
 - The current cwd project is auto-indexed in full mode in the background at startup and periodically refreshed.

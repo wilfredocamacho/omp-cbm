@@ -1,12 +1,13 @@
 {
   "name": "omp-cbm",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "description": "Oh My Pi extension that exposes `codebase-memory-mcp` as native tools, with auto-indexing and output shaping tuned for agent workflows and token saving.",
   "main": "./src/index.ts",
   "files": [
     "src/",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "keywords": [
